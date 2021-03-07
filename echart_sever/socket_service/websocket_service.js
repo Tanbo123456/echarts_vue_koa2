@@ -1,6 +1,6 @@
 // websocket模块
 const ws = require('ws')
-const fs = require('fs')
+const path = require('path')
 const getFileDataUtil = require('../utils/util_Get_File_data')
 
 // 接口数据
@@ -39,13 +39,16 @@ module.exports.listen = function(){
         console.log('有客户端连接');
         socket.on("message",async msg=>{
             console.log('客户端发送数据了');
-            const requestData = JSON.parse(msg)
+            let requestData = JSON.parse(msg)
+            let A={name:'yipo'}
+            // console.log(requestData);
             if (requestData.action==="getData") {
+                // console.log("getData");
                 let filePath = '../data/'+requestData.chartName+'.json'
                 filePath = path.join(__dirname,filePath)
                 const fileData = await getFileDataUtil(filePath) //json格式的
                 requestData.data = fileData
-                socket.send(requestData)
+                socket.send(JSON.stringify(requestData))
             } else {
                 wss.clients.forEach(socket=>{
                     console.log("****");

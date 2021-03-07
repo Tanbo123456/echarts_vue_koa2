@@ -17,15 +17,25 @@ export default {
   },
   computed: {},
   watch: {},
+  created(){
+    this.$socket.registerCallBack('stockData',this.getData)
+  },
   mounted() {
     this.initChart();
-    this.getData();
+    // this.getData();
+    // 发送数据
+    this.$socket.send({
+      action:'getData',
+      socketType:'stockData',
+      chartName:'stock'
+    })
     window.addEventListener("resize", this.screenAdapter);
     this.screenAdapter();
   },
   destroyed() {
     window.removeEventListener("resize", this.screenAdapter);
     clearInterval(this.timerId);
+    this.$socket.unRegisterCallBack('stockData')
   },
   methods: {
     initChart() {
@@ -41,7 +51,7 @@ export default {
       const initOption = {
         title: {
           text: "库存-销量图",
-          top: 20,
+          top: '5%',
           left: 20,
         },
         series: [
@@ -120,10 +130,10 @@ export default {
         this.startInverval();
       });
     },
-    async getData() {
+    getData(data) {
       // 获取后台数据
-      const { data: ret } = await this.$ajax.get("/stock");
-      this.allData = ret;
+      // const { data: ret } = await this.$ajax.get("/stock");
+      this.allData = data;
       this.updateChart();
       // 获取数据成功后启动动画
       this.startInverval();

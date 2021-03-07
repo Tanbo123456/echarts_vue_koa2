@@ -1,12 +1,17 @@
 <template>
   <div class="com-container">
     <div class="title">
-      <span>{{ title }}</span>
-      <span class="iconfont title-icon" @click="showChoice = !showChoice" :style="comStyle">&#xe6eb;</span
+      <span :style="comStyle">{{ title }}</span>
+      <span
+        class="iconfont title-icon"
+        @click="showChoice = !showChoice"
+        :style="comStyle"
+        >&#xe6eb;</span
       >
       <div class="select-con" v-if="showChoice">
         <div
           class="select-item"
+          :style="comStyle"
           v-for="item in selectTypes"
           :key="item.key"
           @click="handleSelect(item.key)"
@@ -27,7 +32,7 @@ export default {
       echartInstance: null,
       dataType: "map",
       showChoice: false,
-      baseFontSize:0
+      baseFontSize: 0,
     };
   },
   computed: {
@@ -45,27 +50,34 @@ export default {
         return this.AllData[this.dataType].title;
       }
     },
-    comStyle(){
-        return {
-            fontSize:this.baseFontSize+'px'
-        }
-    }
+    comStyle() {
+      return {
+        fontSize: this.baseFontSize + "px",
+      };
+    },
   },
   watch: {},
+  created() {
+    // 创建时注册回调函数 在接收数据时会调用
+    this.$socket.registerCallBack("trendData", this.getData);
+  },
   mounted() {
     // 初始化图表
     this.initChart();
-
-    // 获取数据
-
-    this.getData();
-
+    // // 获取数据
+    // this.getData();
+    this.$socket.send({
+      action: "getData",
+      socketType: "trendData",
+      chartName: "trend",
+    });
     // 调节屏幕适配
     window.addEventListener("resize", this.screenAdapter);
     this.screenAdapter();
   },
   destoryed() {
     window.removeEventListener("resize", this.screenAdapter);
+    this.$socket.unRegisterCallBack("trendData");
   },
   methods: {
     initChart() {
@@ -97,9 +109,9 @@ export default {
       this.echartInstance.setOption(initOption);
     },
     // 服务器获取数据
-    async getData() {
-      const result = await this.$ajax("/trend");
-      this.AllData = result.data;
+    async getData(data) {
+      // const result = await this.$ajax("/trend");
+      this.AllData = data;
       this.updateChart();
     },
     updateChart() {
@@ -160,14 +172,14 @@ export default {
     screenAdapter() {
       this.baseFontSize = (this.$refs.trend_ref.offsetWidth / 100) * 3.6;
       const adapterOption = {
-          legend:{
-              itemWidth:this.baseFontSize,
-              itemHeight:this.baseFontSize,
-              itemGap:this.baseFontSize,
-              textStyle:{
-                  fontSize:this.baseFontSize/2
-              }
-          }
+        legend: {
+          itemWidth: this.baseFontSize,
+          itemHeight: this.baseFontSize,
+          itemGap: this.baseFontSize,
+          textStyle: {
+            fontSize: this.baseFontSize / 2,
+          },
+        },
       };
       this.echartInstance.setOption(adapterOption);
       this.echartInstance.resize();
@@ -187,15 +199,15 @@ export default {
 .title {
   position: absolute;
   left: 20px;
-  top: 20px;
+  top: 5%;
   z-index: 10;
   color: white;
   .title-icon {
     margin-left: 10px;
     cursor: pointer;
   }
-  .select-con{
-      background-color: #222733;
+  .select-con {
+    background-color: #222733;
   }
   .select-item {
     cursor: pointer;

@@ -18,12 +18,20 @@ export default {
   },
   computed: {},
   watch: {},
+  created(){
+    this.$socket.registerCallBack('sellerData',this.getData)
+  },
   mounted() {
     // 初始化chart实例对象，
     //   console.log(this.$echarts)
     this.initChart();
     // 获取数据
-    this.getData();
+    // this.getData();
+    this.$socket.send({
+      action:'getData',
+      socketType:'sellerData',
+      chartName:'seller'
+    })
 
     // 监听屏幕尺寸变化
     window.addEventListener('resize',this.screenAdapter)
@@ -31,6 +39,7 @@ export default {
   destroyed(){
     clearInterval(this.timerId)
     window.removeEventListener('resize',this.screenAdapter)
+    this.$socket.unRegisterCallBack('sellerData')
   },
   methods: {
     initChart() {
@@ -40,9 +49,10 @@ export default {
         title: {
           text: "商家销量排行",
           left: 20,
-          top: 20,
+          top: '5%',
           textStyle: {
             color: "#fff",
+            fontSize:this.baseSize
           },
         },
         xAxis: {
@@ -59,7 +69,7 @@ export default {
                 position:'right',
                 color:'#fff'
             },
-            barWidth:66,
+            // barWidth:66,
             itemStyle:{
                 barBorderRadius:[0,33,33,0]
             }
@@ -93,10 +103,10 @@ export default {
         this.startAnimation();
       });
     },
-    async getData() {
+    getData(data) {
       // 获取数据
-      const result = await this.$ajax.get("/seller");
-      this.sellerData = result.data;
+      // const result = await this.$ajax.get("/seller");
+      this.sellerData = data;
       // 获取总页码数
       this.totalPage =
         this.sellerData.length % this.pageNum === 0

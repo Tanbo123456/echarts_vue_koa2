@@ -17,15 +17,24 @@ export default {
   },
   computed: {},
   watch: {},
+  created(){
+    this.$socket.registerCallBack('rankData',this.getData)
+  },
   mounted() {
-    this.initChart();
-    this.getData();
+    this.initChart();// 初始化图表
+    // this.getData();
+    this.$socket.send({
+      action:'getData',
+      socketType:'rankData',
+      chartName:'rank'
+    })
     window.addEventListener("resize", this.screenAdapter);
     this.screenAdapter();
   },
   destroyed() {
     window.removeEventListener("resize", this.screenAdapter);
     clearInterval(this.timerId);
+    this.$socket.unRegisterCallBack('rankData')
   },
   methods: {
     initChart() {
@@ -34,10 +43,19 @@ export default {
         title: {
           text: "地区销量排名",
           left: 20,
-          top: 20,
+          top: '5%',
+          textStyle: {
+            color: "#fff",
+            fontSize:this.baseSize
+          },
         },
         xAxis: {
           type: "category",
+          data:{
+            textStyle:{
+              fontSize:this.baseSize/4
+            }
+          }
         },
         yAxis: {
           type: "value",
@@ -64,20 +82,21 @@ export default {
         this.startInterval();
       });
     },
-    async getData() {
+    async getData(data) {
       // 服务器获取数据
-      const { data: ret } = await this.$ajax.get("/rank");
-      this.allData = ret;
+      // const { data: ret } = await this.$ajax.get("/rank");
+      this.allData = data;
       this.allData.sort((a, b) => {
         return b.value - a.value;
       });
-      this.updateChart();
+      this.updateChart(); 
       this.startInterval();
     },
     updateChart() {
       // 更新图表
       // 准备图例数据
       const legendArr = this.allData.map((item) => item.name);
+      // console.log(legengArr);
       const seriesArr = this.allData.map((item) => item.value);
       // 准备系列数据
       const colorArr = [
@@ -145,18 +164,18 @@ export default {
       }, 3000);
     },
     screenAdapter() {
-      const baseSize = (this.$refs.rank_ref.offsetWidth / 100) * 3.6;
+      this.baseSize = (this.$refs.rank_ref.offsetWidth / 100) * 3.6;
       const adapterOption = {
         title: {
           textStyle: {
-            fontSize: baseSize,
+            fontSize: this.baseSize,
           },
         },
         series: [
             {
-              barWidth: baseSize,
+              barWidth: this.baseSize,
               itemStyle: {
-                barBorderRadius: [baseSize / 2, baseSize / 2, 0, 0],
+                barBorderRadius: [this.baseSize / 2, this.baseSize / 2, 0, 0],
               },
             },
           ],

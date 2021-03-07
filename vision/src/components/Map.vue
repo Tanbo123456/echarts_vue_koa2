@@ -11,21 +11,33 @@ export default {
   data() {
     return {
       echartInstance:null,
-      allData:null
+      allData:[]
     }
   },
   computed: {
   },
   watch: {
   },
+  created(){
+    // 创建时注册回调函数  接受数据时会调用
+    this.$socket.registerCallBack('mapData',this.getData)
+  },
   mounted(){
-    this.initChart()
-    this.getData()
+    this.initChart() // 初始化图表
+    // this.getData()  // 获取数据
+    this.$socket.send({
+      action:'getData',
+      socketType:'mapData',
+      chartName:'map'
+    })
+    // 监听屏幕适配
     window.addEventListener('resize',this.screenAdapter)
     this.screenAdapter()
   },
   destroyed(){
     window.removeEventListener('resize',this.screenAdapter)
+    // 卸载时 注销回调函数
+    this.$socket.unRegisterCallBack('mapData')
   },
   methods: {
     // 图表初始化
@@ -41,7 +53,7 @@ export default {
       const initOption = {
         title:{
           text:'商家分布',
-          left:20,
+          left:'5%',
           top:20
         },
         geo:{
@@ -82,13 +94,15 @@ export default {
     },
 
     // 获取数据
-    async getData(){
-      const result = await this.$ajax.get('/map')
-      this.allData = result.data
+    getData(data){
+      // const result = await this.$ajax.get('/map')
+      this.allData = data?data:[]
       this.updateChart()
+      
     },
     updateChart(){
       // 准备图例数据
+      // console.log(this.allData);
       const legendData = this.allData.map(item=>item.name) //[]
       // 准备散点数据
       const seriesArr = this.allData.map(item=>({
